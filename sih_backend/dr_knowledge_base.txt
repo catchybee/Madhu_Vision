@@ -1,0 +1,68 @@
+# DIABETIC RETINOPATHY (DR) CLINICAL KNOWLEDGE BASE
+This document serves as the ground truth context for the Madhu AI Assistant.
+
+## 1. Disease Overview
+Diabetic retinopathy (DR) is a microvascular complication of diabetes mellitus and a leading cause of vision loss and preventable blindness worldwide. It occurs when high blood sugar levels damage the blood vessels in the retina.
+
+## 2. Stages and Grading
+Diabetic Retinopathy is clinically classified into four primary stages:
+
+### Grade 0: No Apparent Retinopathy
+No abnormalities are visible. The patient should maintain routine annual screening.
+
+### Grade 1: Mild Nonproliferative Diabetic Retinopathy (NPDR)
+Characterized by the presence of at least one microaneurysm. Microaneurysms are small outpouchings in the retinal blood vessels. At this stage, vision is usually normal, but strict blood sugar control is required.
+
+### Grade 2: Moderate Nonproliferative Diabetic Retinopathy (NPDR)
+Characterized by multiple microaneurysms, dot-and-blot hemorrhages, hard exudates, and cotton wool spots. The blood vessels that nourish the retina may swell and distort.
+
+### Grade 3: Severe Nonproliferative Diabetic Retinopathy (NPDR)
+Characterized by the "4-2-1 rule":
+- Severe intraretinal hemorrhages in 4 quadrants.
+- Venous beading in at least 2 quadrants.
+- Intraretinal microvascular abnormalities (IRMA) in at least 1 quadrant.
+Patients are at high risk of progressing to proliferative DR.
+
+### Grade 4: Proliferative Diabetic Retinopathy (PDR)
+The most advanced stage. Ischemia (lack of oxygen) triggers the retina to secrete Vascular Endothelial Growth Factor (VEGF), causing fragile, abnormal new blood vessels to grow (neovascularization). These vessels can bleed into the vitreous causing severe vision loss, or cause tractional retinal detachment.
+
+## 3. Symptoms
+Early stages of DR typically present no symptoms. As the disease progresses, symptoms may include:
+- Spots or dark strings floating in vision (floaters).
+- Blurred vision.
+- Fluctuating vision.
+- Impaired color vision.
+- Dark or empty areas in the visual field.
+- Vision loss.
+
+## 4. Dietary Guidelines & Nutrition
+Diet plays a critical role in managing DR by controlling blood glucose, blood pressure, and cholesterol.
+
+### Foods to Consume:
+- **Leafy Greens:** Spinach, kale, and collard greens are rich in lutein and zeaxanthin, antioxidants that protect the macula.
+- **Omega-3 Fatty Acids:** Salmon, tuna, chia seeds, and walnuts reduce retinal inflammation and protect against microvascular damage.
+- **Low-Glycemic Index (GI) Carbohydrates:** Whole grains (oats, quinoa, brown rice) prevent rapid blood sugar spikes.
+- **Lean Proteins:** Chicken, tofu, and legumes.
+- **Citrus Fruits & Berries:** Rich in Vitamin C, which helps maintain the integrity of blood vessels.
+
+### Foods to Avoid:
+- **Refined Carbohydrates:** White bread, white rice, and pastries cause rapid glucose spikes.
+- **Added Sugars:** Soda, candy, and sweetened beverages.
+- **High-Sodium Foods:** Processed meats and canned soups increase blood pressure, exacerbating retinal vessel damage.
+- **Trans Fats & Saturated Fats:** Fried foods and excessive red meat can worsen cholesterol levels, leading to hard exudates in the retina.
+
+## 5. Treatment Protocols
+Treatment depends on the severity of the disease and the presence of Diabetic Macular Edema (DME).
+
+- **Observation:** Mild to Moderate NPDR typically requires no immediate surgical treatment, only strict metabolic control and regular monitoring.
+- **Anti-VEGF Injections:** Medications (e.g., Aflibercept, Bevacizumab, Ranibizumab) injected into the eye to block VEGF, reducing swelling and abnormal vessel growth. Primary treatment for DME and PDR.
+- **Corticosteroids:** Implants or injections to reduce severe retinal inflammation.
+- **Focal/Grid Macular Laser Surgery:** Burns leaking blood vessels to stop fluid accumulation in the macula.
+- **Panretinal Photocoagulation (PRP):** Scatter laser surgery applied to the peripheral retina to shrink abnormal new blood vessels in PDR.
+- **Vitrectomy:** Surgical removal of the vitreous gel and blood from the center of the eye in cases of severe vitreous hemorrhage or tractional retinal detachment.
+
+## 6. Prevention
+- Maintain HbA1c levels below 7.0%.
+- Maintain blood pressure below 130/80 mmHg.
+- Keep LDL cholesterol under 100 mg/dL.
+- Schedule dilated eye exams annually, or more frequently if retinopathy is diagnosed.

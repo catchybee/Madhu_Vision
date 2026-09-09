@@ -1,0 +1,176 @@
+from fastapi import FastAPI, File, UploadFile
+import uvicorn
+import numpy as np
+import cv2
+import onnxruntime as ort
+import scipy.io as sio
+import base64
+from fastapi.middleware.cors import CORSMiddleware
+app = FastAPI(title="SIH Telemedicine AI API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+try:
+    session = ort.InferenceSession("dr_model_cam.onnx")
+    input_name = session.get_inputs()[0].name
+    
+    # Load mathematically correct CAM weights
+    mat = sio.loadmat('cam_weights.mat')
+    fc_weights = mat['fcWeights'] 
+    print(f"Success: AI Model + CAM Weights loaded successfully! Ready for inference.")
+except Exception as e:
+    print(f"WAITING FOR FILES: Please put dr_model_cam.onnx and cam_weights.mat in this folder. Error: {e}")
+
+def preprocess_image(image_bytes):
+    nparr = np.frombuffer(image_bytes, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    
+    img_resized = cv2.resize(img_rgb, (224, 224))
+    
+    lab = cv2.cvtColor(img_resized, cv2.COLOR_RGB2LAB)
+    l, a, b = cv2.split(lab)
+    
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    cl = clahe.apply(l)
+    
+    limg = cv2.merge((cl, a, b))
+    enhanced_img = cv2.cvtColor(limg, cv2.COLOR_LAB2RGB)
+    
+    input_data = np.array(enhanced_img, dtype=np.float32)
+    input_data = np.transpose(input_data, (2, 0, 1))
+    input_data = np.expand_dims(input_data, axis=0)
+    
+    return input_data, img_resized, enhanced_img
+
+def segment_vessels(enhanced_img):
+    # Classical morphological segmentation mirroring MATLAB's segment_retina
+    b, g, r = cv2.split(enhanced_img)
+    # Vessels are most prominent in the green channel
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    g_clahe = clahe.apply(g)
+    
+    # Morphological Top-Hat to extract vessels
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15))
+    tophat = cv2.morphologyEx(g_clahe, cv2.MORPH_TOPHAT, kernel)
+    
+    _, mask = cv2.threshold(tophat, 15, 255, cv2.THRESH_BINARY)
+    
+    # Create overlay (red vessels)
+    overlay = enhanced_img.copy()
+    overlay[mask == 255] = [255, 0, 0] # Red in RGB
+    return overlay
+
+def encode_base64(img_rgb):
+    img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
+    _, buffer = cv2.imencode('.jpg', img_bgr)
+    return base64.b64encode(buffer).decode('utf-8')
+
+@app.get("/")
+def health_check():
+    return {"status": "AI Server is running perfectly"}
+
+@app.post("/predict")
+async def predict(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        
+        # 1. Preprocess
+        input_tensor, orig_img, enhanced_img = preprocess_image(contents)
+        
+        # 2. Run AI Prediction (needs the CAM model)
+        outputs = session.run(None, {input_name: input_tensor})
+        predictions = outputs[0][0]
+        feature_map = outputs[1][0] # From dr_model_cam.onnx
+        
+        # 3. Get Class
+        predicted_class = int(np.argmax(predictions))
+        confidence = float(np.max(predictions))
+        
+        # 4. Mathematically Correct Grad-CAM
+        class_weights = fc_weights[predicted_class, :] 
+        cam = np.zeros((feature_map.shape[1], feature_map.shape[2]), dtype=np.float32)
+        for i, w in enumerate(class_weights):
+            cam += w * feature_map[i, :, :]
+            
+        cam = np.maximum(cam, 0) # ReLU
+        cam = cv2.resize(cam, (224, 224))
+        cam_min, cam_max = np.min(cam), np.max(cam)
+        if cam_max > cam_min:
+            cam = (cam - cam_min) / (cam_max - cam_min)
+        cam = np.uint8(255 * cam)
+        
+        heatmap = cv2.applyColorMap(cam, cv2.COLORMAP_JET)
+        heatmap_rgb = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
+        grad_cam_img = np.uint8(heatmap_rgb * 0.4 + orig_img * 0.6)
+        
+        # 5. Segmentation
+        segmentation_img = segment_vessels(enhanced_img)
+        
+        # 6. Create proper subplot-style padded grid
+        def create_padded_grid(img1, img2, img3, img4, t1, t2, t3, t4):
+            # Resize all images to 300x300 for clarity
+            sz = 300
+            i1 = cv2.resize(img1, (sz, sz))
+            i2 = cv2.resize(img2, (sz, sz))
+            i3 = cv2.resize(img3, (sz, sz))
+            i4 = cv2.resize(img4, (sz, sz))
+            
+            pad_top = 40
+            pad_side = 20
+            
+            canvas_h = sz * 2 + pad_top * 2 + pad_side * 3
+            canvas_w = sz * 2 + pad_side * 3
+            # Background color (using dark gray/black to match MATLAB)
+            canvas = np.zeros((canvas_h, canvas_w, 3), dtype=np.uint8)
+            canvas[:] = (30, 30, 30) # slight dark gray
+            
+            def paste(img, title, row, col):
+                y = pad_side + row * (sz + pad_top + pad_side) + pad_top
+                x = pad_side + col * (sz + pad_side)
+                
+                # Paste image
+                canvas[y:y+sz, x:x+sz] = img
+                
+                # Center text above image
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                font_scale = 0.6
+                thickness = 1
+                text_size = cv2.getTextSize(title, font, font_scale, thickness)[0]
+                text_x = x + (sz - text_size[0]) // 2
+                text_y = y - 15
+                cv2.putText(canvas, title, (text_x, text_y), font, font_scale, (255, 255, 255), thickness, cv2.LINE_AA)
+            
+            paste(i1, t1, 0, 0)
+            paste(i2, t2, 0, 1)
+            paste(i3, t3, 1, 0)
+            paste(i4, t4, 1, 1)
+            return canvas
+            
+        cam_title = f"Grad-CAM (Grade: {predicted_class}, {confidence*100:.1f}%)"
+        grid_img = create_padded_grid(orig_img, enhanced_img, segmentation_img, grad_cam_img, 
+                                      "Original Image", "Enhanced Image", 
+                                      "Lesion & Vessel Segmentation", cam_title)
+        
+        # Encode Grid to Base64
+        grid_base64 = encode_base64(grid_img)
+        
+        return {
+            "success": True,
+            "grade": predicted_class,
+            "confidence": confidence,
+            "raw_scores": predictions.flatten().tolist(),
+            "heatmap_base64": grid_base64
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
