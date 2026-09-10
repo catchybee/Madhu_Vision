@@ -1125,9 +1125,14 @@ export default function Dashboard() {
         
         {/* Top Header */}
         <header className="h-20 bg-white/40 backdrop-blur-xl border-b border-white/50 flex items-center justify-between px-8 z-10 shadow-sm no-print">
+            <div className="flex items-center gap-4">
+              <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden p-2 bg-white/60 hover:bg-white text-slate-800 rounded-xl shadow-sm border border-slate-200 active:scale-95 transition-all">
+                <Menu size={20} />
+              </button>
           <h1 className="text-xl font-extrabold text-slate-800 capitalize drop-shadow-sm">
             {selectedPatient ? 'Patient Details' : activeTab.replace('_', ' ')}
           </h1>
+            </div>
           <div className="flex items-center gap-4">
             <select 
               value={displayLang}
