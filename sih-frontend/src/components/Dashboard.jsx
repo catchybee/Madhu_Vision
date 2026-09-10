@@ -11,6 +11,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, LabelList } from 'recharts';
 import { translateText, getCachedText } from '../bhashini';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 
 export default function Dashboard() {
   const [session, setSession] = useState(null);
@@ -20,6 +22,31 @@ export default function Dashboard() {
   // Navigation State
   const [activeTab, setActiveTab] = useState('overview'); // overview, add_patient, patients, about, settings, madhu_ai
   const [selectedPatient, setSelectedPatient] = useState(null); 
+  const [uiClinicalNote, setUiClinicalNote] = useState(null);
+  const [isFetchingNote, setIsFetchingNote] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (selectedPatient) {
+      setUiClinicalNote(null);
+      setIsFetchingNote(true);
+      fetch(`${API_URL}/generate_clinical_note`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image_url: selectedPatient.image_url, grade: selectedPatient.ai_grade })
+      })
+      .then(res => res.json())
+      .then(data => {
+        setUiClinicalNote(data.note);
+        setIsFetchingNote(false);
+      })
+      .catch(err => {
+        setUiClinicalNote("Error fetching clinical note.");
+        setIsFetchingNote(false);
+      });
+    }
+  }, [selectedPatient]);
+ 
   const [displayLang, setDisplayLang] = useState('en');
   
   // Profile Edit State
@@ -144,7 +171,7 @@ export default function Dashboard() {
       const formPayload = new FormData();
       formPayload.append('file', file);
       
-      const aiResponse = await fetch('http://localhost:8000/predict', { method: 'POST', body: formPayload });
+      const aiResponse = await fetch(`${API_URL}/predict`, { method: 'POST', body: formPayload });
       const aiData = await aiResponse.json();
       if (!aiData.success) throw new Error('AI analysis failed: ' + aiData.error);
 
@@ -210,9 +237,92 @@ export default function Dashboard() {
     }
   };
 
-  const generatePDF = () => {
-    // We use native browser print for perfect vector-based PDFs, bypassing html2canvas CSS limitations
-    window.print();
+  const generatePDF = async () => {
+    if (!selectedPatient) return;
+    
+    const originalText = document.getElementById('pdf-btn-text');
+    if(originalText) originalText.innerText = "Downloading...";
+
+    try {
+      let clinicalNote = uiClinicalNote;
+      if (!clinicalNote || isFetchingNote) {
+        const response = await fetch(`${API_URL}/generate_clinical_note`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_url: selectedPatient.image_url, grade: selectedPatient.ai_grade })
+        });
+        const data = await response.json();
+        clinicalNote = data.note;
+      }
+
+      const reportHTML = `
+        <div id="pdf-report-container" style="padding: 40px; font-family: Arial, sans-serif; color: #333; max-width: 800px; margin: 0 auto; background: white;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
+            <h1 style="color: #2A9D8F; margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -1px;">MADHU<span style="color: #333">VISION</span></h1>
+            <h2 style="margin: 0; font-size: 18px; color: #555; font-weight: bold;">Diabetic Retinopathy Analysis Report</h2>
+          </div>
+          
+          <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+            <div style="flex: 1;">
+              <div style="background-color: #b0c4de; padding: 5px 10px; font-weight: bold; margin-bottom: 10px; border: 1px solid #9aaebd;">Patient Information</div>
+              <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+                <tr><td style="font-weight: bold; padding: 4px 0; width: 40%;">Patient ID:</td><td>${selectedPatient.patient_id}</td></tr>
+                <tr><td style="font-weight: bold; padding: 4px 0;">Patient Name:</td><td>${selectedPatient.patient_name}</td></tr>
+                <tr><td style="font-weight: bold; padding: 4px 0;">Age / Gender:</td><td>${selectedPatient.patient_age} / ${selectedPatient.gender}</td></tr>
+                <tr><td style="font-weight: bold; padding: 4px 0;">Blood Sugar:</td><td>${selectedPatient.blood_sugar_level || 'N/A'} mg/dL</td></tr>
+              </table>
+            </div>
+            <div style="flex: 1;">
+              <div style="background-color: #b0c4de; padding: 5px 10px; font-weight: bold; margin-bottom: 10px; border: 1px solid #9aaebd;">General Information</div>
+              <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+                <tr><td style="font-weight: bold; padding: 4px 0; width: 50%;">Referring Provider:</td><td>Dr. ${session?.user?.user_metadata?.doctor_name || 'MadhuVision Staff'}</td></tr>
+                <tr><td style="font-weight: bold; padding: 4px 0;">Hospital:</td><td>${session?.user?.user_metadata?.hospital_name || 'MadhuVision Clinic'}</td></tr>
+                <tr><td style="font-weight: bold; padding: 4px 0;">Analysis Date:</td><td>${new Date(selectedPatient.created_at).toLocaleDateString()}</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div style="background-color: #b0c4de; padding: 5px 10px; font-weight: bold; border: 1px solid #9aaebd; border-bottom: none;">MadhuVision (DR) Exam Result Summary</div>
+          <div style="border: 1px solid #9aaebd; padding: 15px; margin-bottom: 20px; text-align: center;">
+            <p style="color: #c0392b; font-weight: bold; font-size: 18px; margin: 0;">${getGradeBadge(selectedPatient.ai_grade).label.toUpperCase()} DETECTED</p>
+            <p style="margin: 5px 0 0 0; font-size: 14px; color: #444; font-weight: bold;">AI Diagnostic Confidence Score: ${(selectedPatient.confidence * 100).toFixed(1)}%</p>
+          </div>
+
+          <div style="text-align: center; margin-bottom: 20px; page-break-inside: avoid;">
+            <img src="${selectedPatient.image_url}" style="max-width: 100%; max-height: 450px; object-fit: contain; border: 1px solid #ddd; margin: 0 auto; display: block;" crossorigin="anonymous"/>
+            <p style="font-size: 12px; color: #777; margin-top: 5px; font-weight: bold;">*Do not use the above images for definitive diagnostic purposes without clinical correlation.</p>
+          </div>
+
+          <div style="background-color: #b0c4de; padding: 5px 10px; font-weight: bold; margin-bottom: 10px; border: 1px solid #9aaebd; page-break-inside: avoid; page-break-before: auto;">Madhu AI Analysis</div>
+          <div style="background-color: #f8fafc; padding: 15px; border: 1px solid #cbd5e1; font-size: 14px; line-height: 1.6; color: #334155; border-radius: 4px;">
+            ${clinicalNote}
+          </div>
+        </div>
+      `;
+
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.innerHTML = reportHTML;
+      document.body.appendChild(tempDiv);
+      
+      const html2pdf = (await import('html2pdf.js')).default;
+      const opt = {
+        margin:       0.5,
+        filename:     `MadhuVision_Report_${selectedPatient.patient_id}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] },
+          jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      await html2pdf().from(tempDiv.firstElementChild).set(opt).save();
+      document.body.removeChild(tempDiv);
+      
+    } catch(err) {
+      alert("Error generating PDF: " + err.message);
+    } finally {
+      if(originalText) originalText.innerText = "Download PDF";
+    }
   };
 
   const handleEmail = () => {
@@ -287,21 +397,21 @@ export default function Dashboard() {
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <motion.div variants={itemVariants} whileHover={{ y: -5 }} className="bg-white/60 backdrop-blur-xl p-6 rounded-3xl border border-white/60 shadow-xl flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-blue-100/50 text-blue-600 flex items-center justify-center shadow-inner">
-                <Activity size={20} />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-blue-100/50 text-blue-600 flex items-center justify-center shadow-inner">
+                  <Activity size={20} />
               </div>
               <p className="text-slate-600 font-bold text-sm"><Translate text="Total Scans" /></p>
             </div>
             <p className="text-4xl font-extrabold text-slate-800">{totalScans}</p>
           </motion.div>
           
-          <motion.div variants={itemVariants} whileHover={{ y: -5 }} className="bg-white/60 backdrop-blur-xl p-6 rounded-3xl border border-white/60 shadow-xl flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-rose-400/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-rose-100/50 text-rose-600 flex items-center justify-center shadow-inner">
-                <AlertCircle size={20} />
+          <motion.div variants={itemVariants} onClick={() => { setActiveTab('severe'); }} whileHover={{ y: -5 }} className="bg-white/60 backdrop-blur-xl p-6 rounded-3xl border border-white/60 shadow-xl flex flex-col justify-between relative overflow-hidden cursor-pointer hover:shadow-2xl active:scale-95 transition-all">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-rose-400/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-rose-100/50 text-rose-600 flex items-center justify-center shadow-inner">
+                  <AlertCircle size={20} />
               </div>
               <p className="text-slate-600 font-bold text-sm"><Translate text="Severe DR Detected" /></p>
             </div>
@@ -504,19 +614,22 @@ export default function Dashboard() {
     </motion.div>
   );
 
-  const renderPatientList = () => (
+  const renderPatientList = (isSevere = false) => {
+    const titleText = isSevere ? "Severe DR Detected" : "All Patient Records";
+    const subtitleText = isSevere ? "View and manage critical patients requiring immediate attention." : "View and manage all your clinical diagnoses.";
+    return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" exit="exit" className="bg-white/50 backdrop-blur-xl rounded-3xl shadow-xl border border-white/60 flex-1 flex flex-col h-full overflow-hidden">
       <div className="p-8 border-b border-white/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/20">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-indigo-500/20 backdrop-blur-md border border-indigo-500/30 flex items-center justify-center text-indigo-700 shadow-sm"><Users size={24} /></div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800 drop-shadow-sm"><Translate text="All Patient Records" /></h2>
-            <p className="text-sm text-slate-600 font-medium"><Translate text="View and manage all your clinical diagnoses." /></p>
+            <h2 className="text-2xl font-bold text-slate-800 drop-shadow-sm"><Translate text={titleText} /></h2>
+              <p className="text-sm text-slate-600 font-medium"><Translate text={subtitleText} /></p>
           </div>
         </div>
         <div className="relative">
           <Search size={18} className="absolute left-3 top-2.5 text-slate-500" />
-          <input type="text" placeholder="Search patients..." className="pl-10 pr-4 py-2 bg-white/40 backdrop-blur-md border border-white/50 rounded-xl text-sm font-semibold outline-none focus:border-[#2A9D8F] focus:bg-white/60 shadow-sm w-full sm:w-64 transition-all" />
+          <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search patients..." className="pl-10 pr-4 py-2 bg-white/40 backdrop-blur-md border border-white/50 rounded-xl text-sm font-semibold outline-none focus:border-[#2A9D8F] focus:bg-white/60 shadow-sm w-full sm:w-64 transition-all" />
         </div>
       </div>
 
@@ -535,7 +648,16 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/30">
-              {diagnoses.map((diag, index) => {
+                {diagnoses.filter(diag => {
+                  if (isSevere && diag.ai_grade < 3) return false;
+                  if(!searchQuery) return true;
+                  const lowerQ = searchQuery.toLowerCase();
+                  return (
+                    diag.patient_name.toLowerCase().includes(lowerQ) ||
+                    diag.patient_id.toLowerCase().includes(lowerQ) ||
+                    getGradeBadge(diag.ai_grade).label.toLowerCase().includes(lowerQ)
+                  );
+                }).map((diag, index) => {
                 const badge = getGradeBadge(diag.ai_grade);
                 return (
                   <motion.tr 
@@ -573,24 +695,26 @@ export default function Dashboard() {
     </motion.div>
   );
 
-  const renderSinglePatient = () => {
+  };
+
+    const renderSinglePatient = () => {
     if (!selectedPatient) return null;
     const badge = getGradeBadge(selectedPatient.ai_grade);
     
     return (
       <motion.div variants={containerVariants} initial="hidden" animate="visible" exit="exit" className="max-w-5xl mx-auto space-y-6">
         <div className="flex items-center justify-between no-print">
-          <motion.button variants={itemVariants} onClick={() => setSelectedPatient(null)} className="flex items-center gap-2 text-slate-600 hover:text-[#2A9D8F] font-bold transition-colors bg-white/40 backdrop-blur-md px-4 py-2 rounded-xl border border-white/50 shadow-sm w-fit">
+          <motion.button variants={itemVariants} onClick={() => setSelectedPatient(null)} className="flex items-center gap-2 text-slate-600 hover:text-[#2A9D8F] font-bold transition-all active:scale-95 cursor-pointer bg-white/40 hover:bg-white/60 backdrop-blur-md px-4 py-2 rounded-xl border border-white/50 shadow-sm hover:shadow-md w-fit">
             <ChevronLeft size={20} /> Back to All Patients
           </motion.button>
           
           <motion.div variants={itemVariants} className="flex gap-3">
-            <button onClick={handleEmail} className="flex items-center gap-2 bg-white/50 hover:bg-white/80 text-blue-700 font-bold px-4 py-2 rounded-xl border border-blue-500/30 shadow-sm transition-all">
+            <button onClick={handleEmail} className="flex items-center gap-2 bg-white/50 hover:bg-white/80 text-blue-700 font-bold px-4 py-2 rounded-xl border border-blue-500/30 shadow-sm hover:shadow-md active:scale-95 cursor-pointer transition-all">
               <Mail size={18} /> Email Patient
             </button>
-            <button onClick={generatePDF} className="flex items-center gap-2 bg-[#2A9D8F] hover:bg-[#218276] text-white font-bold px-4 py-2 rounded-xl shadow-md transition-all">
-              <Download size={18} /> Download PDF
-            </button>
+            <button onClick={generatePDF} className="flex items-center gap-2 bg-[#2A9D8F] hover:bg-[#218276] active:scale-95 cursor-pointer text-white font-bold px-4 py-2 rounded-xl shadow-md hover:shadow-lg transition-all">
+                <Download size={18} /> <span id="pdf-btn-text">Download PDF</span>
+              </button>
           </motion.div>
         </div>
 
@@ -608,7 +732,7 @@ export default function Dashboard() {
             <div className="p-8 border-r border-white/40 flex flex-col items-center justify-center bg-white/10">
               <p className="text-slate-600 font-bold text-sm mb-4 self-start uppercase tracking-wider">Grad-CAM Retina Scan</p>
               <div 
-                className="w-full aspect-square rounded-2xl overflow-hidden shadow-xl border-4 border-white/50 cursor-pointer relative group"
+                className="w-full aspect-square rounded-2xl overflow-hidden shadow-xl border-4 border-white/50 cursor-pointer active:scale-[0.98] transition-transform relative group"
                 onClick={() => setFullScreenImage(selectedPatient.image_url)}
               >
                 <img src={selectedPatient.image_url} alt="Retina" crossOrigin="anonymous" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
@@ -647,6 +771,25 @@ export default function Dashboard() {
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed font-medium">The AI model is highly confident in this diagnosis. The Grad-CAM heatmap highlights the specific vascular structures that contributed to the classification of Grade {selectedPatient.ai_grade}.</p>
                 </div>
+
+                  {/* Gemini Live Analysis Box */}
+                  <div className="mt-6 bg-white/40 backdrop-blur-md p-6 rounded-2xl border border-white/50 shadow-sm relative overflow-hidden">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkles size={18} className="text-indigo-600 animate-pulse" />
+                      <span className="font-bold text-slate-800 tracking-tight">Madhu AI Analysis</span>
+                    </div>
+                    {isFetchingNote ? (
+                      <div className="flex flex-col gap-2 animate-pulse">
+                        <div className="h-4 bg-indigo-200/50 rounded w-full"></div>
+                        <div className="h-4 bg-indigo-200/50 rounded w-5/6"></div>
+                        <div className="h-4 bg-indigo-200/50 rounded w-4/6"></div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-700 leading-relaxed font-medium bg-indigo-50/50 p-4 rounded-xl border border-indigo-100/50 shadow-inner">
+                        {uiClinicalNote || "Analysis not available."}
+                      </p>
+                    )}
+                  </div>
               </div>
             </div>
           </div>
@@ -677,36 +820,36 @@ export default function Dashboard() {
     </motion.div>
   );
 
-  const handleChatSubmit = (e) => {
+    const handleChatSubmit = async (e) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
     const newUserMsg = { role: 'user', text: chatInput };
-    setChatMessages(prev => [...prev, newUserMsg]);
+    const currentHistory = [...chatMessages, newUserMsg];
+    
+    setChatMessages(currentHistory);
     setChatInput('');
 
-    setTimeout(() => {
-      let response = "I am Madhu AI, specialized in Diabetic Retinopathy. Please ask me about DR grades, diet plans, or general eye health!";
-      const lowerInput = newUserMsg.text.toLowerCase();
-
-      if (lowerInput.includes('diet') || lowerInput.includes('food')) {
-         if (lowerInput.includes('mild') || lowerInput.includes('grade 1') || lowerInput.includes('grade 2')) {
-           response = "For Mild to Moderate DR, focus on stabilizing blood sugar. A diet rich in leafy greens, whole grains, and lean proteins is recommended. Avoid refined sugars and processed carbs.";
-         } else if (lowerInput.includes('severe') || lowerInput.includes('grade 3') || lowerInput.includes('grade 4') || lowerInput.includes('proliferative')) {
-           response = "For Severe/Proliferative DR, strict glycemic control is critical. Limit carbohydrates, avoid all processed sugars, and consult a nutritionist. Omega-3 rich foods like fish can help support retinal health and reduce inflammation.";
-         } else {
-           response = "A DR-friendly diet focuses on low-glycemic foods, high fiber, and antioxidant-rich vegetables. Managing your blood sugar, blood pressure, and cholesterol is key to preventing progression.";
-         }
-      } else if (lowerInput.includes('grade') || lowerInput.includes('level')) {
-         response = "Diabetic Retinopathy has 4 main grades:\n1. Mild Nonproliferative (Microaneurysms occur)\n2. Moderate Nonproliferative (Blood vessels swell)\n3. Severe Nonproliferative (Blocked blood vessels)\n4. Proliferative (New fragile blood vessels grow and can bleed).";
-      } else if (lowerInput.includes('symptom') || lowerInput.includes('sign')) {
-         response = "Early DR often has no symptoms. As it progresses, symptoms include spots or dark strings floating in your vision (floaters), blurred vision, fluctuating vision, and vision loss.";
-      } else if (lowerInput.includes('cure') || lowerInput.includes('treatment')) {
-         response = "While there is no absolute cure, treatments like laser surgery (photocoagulation), anti-VEGF injections, or vitrectomy can slow or stop the progression. Early detection and blood sugar management are the best defenses.";
+    try {
+      const response = await fetch(`${API_URL}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: newUserMsg.text,
+          history: chatMessages
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.response) {
+        setChatMessages(prev => [...prev, { role: 'assistant', text: data.response }]);
+      } else {
+        setChatMessages(prev => [...prev, { role: 'assistant', text: "Sorry, I am having trouble connecting to my brain right now!" }]);
       }
-
-      setChatMessages(prev => [...prev, { role: 'assistant', text: response }]);
-    }, 1000);
+    } catch (error) {
+      setChatMessages(prev => [...prev, { role: 'assistant', text: "Connection error. Please ensure the backend server is running." }]);
+    }
   };
 
   const renderMadhuAI = () => (
@@ -916,8 +1059,12 @@ export default function Dashboard() {
             <UserPlus size={20} /> <Translate text="Add New Scan" />
           </button>
           
-          <button onClick={() => { setActiveTab('patients'); setSelectedPatient(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${(activeTab === 'patients' || selectedPatient) ? 'bg-[#2A9D8F]/90 backdrop-blur-md text-white shadow-lg border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
+          <button onClick={() => { setActiveTab('patients'); setSelectedPatient(null); setSearchQuery(''); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${(activeTab === 'patients' || selectedPatient) ? 'bg-[#2A9D8F]/90 backdrop-blur-md text-white shadow-lg border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
             <Users size={20} /> <Translate text="All Patients" />
+          </button>
+
+          <button onClick={() => { setActiveTab('severe'); setSelectedPatient(null); setSearchQuery(''); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'severe' ? 'bg-rose-500/90 backdrop-blur-md text-white shadow-lg border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
+            <AlertCircle size={20} /> <Translate text="Severe Cases" />
           </button>
 
           <button onClick={() => { setActiveTab('madhu_ai'); setSelectedPatient(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all mt-4 border ${activeTab === 'madhu_ai' ? 'bg-indigo-500/90 text-white border-indigo-400/50 shadow-[0_0_15px_rgba(99,102,241,0.5)]' : 'bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 border-indigo-500/20'}`}>
@@ -990,7 +1137,8 @@ export default function Dashboard() {
               <motion.div key={activeTab} className="h-full">
                 {activeTab === 'overview' && renderOverview()}
                 {activeTab === 'add_patient' && renderAddPatient()}
-                {activeTab === 'patients' && renderPatientList()}
+                {activeTab === 'patients' && renderPatientList(false)}
+                  {activeTab === 'severe' && renderPatientList(true)}
                 {activeTab === 'madhu_ai' && renderMadhuAI()}
                 {activeTab === 'about' && renderAbout()}
                 {activeTab === 'settings' && renderSettings()}

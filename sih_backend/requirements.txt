@@ -4,3 +4,7 @@ onnxruntime
 opencv-python-headless
 numpy
 python-multipart
+google-generativeai
+python-dotenv
+requests
+pillow

@@ -1,3 +1,13 @@
+
+import os
+import requests
+import io
+from PIL import Image
+from pydantic import BaseModel
+import google.generativeai as genai
+from dotenv import load_dotenv
+
+load_dotenv()
 from fastapi import FastAPI, File, UploadFile
 import uvicorn
 import numpy as np
@@ -170,6 +180,66 @@ async def predict(file: UploadFile = File(...)):
         }
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+class ChatRequest(BaseModel):
+    message: str
+    history: list = []
+
+@app.post("/chat")
+async def chat_endpoint(req: ChatRequest):
+    try:
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            return {"response": "Error: GEMINI_API_KEY not found."}
+        
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(model_name="gemini-3.6-flash")
+        
+        try:
+            with open("my_rag_data.txt", "r", encoding="utf-8") as f:
+                rag_data = f.read()
+        except FileNotFoundError:
+            rag_data = "No knowledge base found."
+            
+        system_prompt = f"You are Madhu AI, a highly specialized assistant for Diabetic Retinopathy. Use this knowledge base:\n{rag_data}"
+        
+        chat = model.start_chat(history=[])
+        response = chat.send_message(system_prompt + "\n\nUser query: " + req.message)
+        
+        return {"response": response.text}
+    except Exception as e:
+        return {"response": f"Error: {str(e)}"}
+
+class ReportRequest(BaseModel):
+    image_url: str
+    grade: int
+
+@app.post("/generate_clinical_note")
+async def generate_clinical_note(req: ReportRequest):
+    try:
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            return {"note": "GEMINI_API_KEY missing."}
+            
+        import google.generativeai as genai
+        from PIL import Image
+        import io
+        import requests
+        
+        img_response = requests.get(req.image_url)
+        img_response.raise_for_status()
+        img = Image.open(io.BytesIO(img_response.content)).convert("RGB")
+        
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(model_name="gemini-3.6-flash")
+        
+        prompt = f"This is a retinal scan grid for a patient with Grade {req.grade} Diabetic Retinopathy. The bottom right panel is the Grad-CAM heatmap highlighting the specific pathological regions. In exactly two highly clinical sentences, describe what specific lesions (like microaneurysms, hard exudates, or hemorrhages) the AI is focusing on in those red areas to justify this diagnosis."
+        
+        resp = model.generate_content([prompt, img])
+        return {"note": resp.text}
+    except Exception as e:
+        return {"note": f"Error: {str(e)}"}
 
 if __name__ == "__main__":
     import uvicorn
