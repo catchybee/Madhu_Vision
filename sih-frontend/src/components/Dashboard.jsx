@@ -6,7 +6,7 @@ import html2canvas from 'html2canvas';
 import { 
   LogOut, UploadCloud, Activity, User, Droplet, Clock, Search, 
   FileText, ShieldCheck, X, LayoutDashboard, UserPlus, Users, Info, 
-  Settings, ChevronLeft, AlertCircle, Download, Mail, Bot, Send, Sparkles, MessageSquare, Edit2, Save
+  Settings, ChevronLeft, Menu, AlertCircle, Download, Mail, Bot, Send, Sparkles, MessageSquare, Edit2, Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, LabelList } from 'recharts';
@@ -25,6 +25,7 @@ export default function Dashboard() {
   const [uiClinicalNote, setUiClinicalNote] = useState(null);
   const [isFetchingNote, setIsFetchingNote] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (selectedPatient) {
@@ -227,7 +228,7 @@ export default function Dashboard() {
       setFilePreview(null);
       
       await fetchDiagnoses(session.user.id);
-      setActiveTab('patients'); 
+      setIsMobileMenuOpen(false); setActiveTab('patients'); 
       
     } catch (error) {
       setMessage(`Error: ${error.message}`);
@@ -407,7 +408,7 @@ export default function Dashboard() {
             <p className="text-4xl font-extrabold text-slate-800">{totalScans}</p>
           </motion.div>
           
-          <motion.div variants={itemVariants} onClick={() => { setActiveTab('severe'); }} whileHover={{ y: -5 }} className="bg-white/60 backdrop-blur-xl p-6 rounded-3xl border border-white/60 shadow-xl flex flex-col justify-between relative overflow-hidden cursor-pointer hover:shadow-2xl active:scale-95 transition-all">
+          <motion.div variants={itemVariants} onClick={() => { setIsMobileMenuOpen(false); setActiveTab('severe'); }} whileHover={{ y: -5 }} className="bg-white/60 backdrop-blur-xl p-6 rounded-3xl border border-white/60 shadow-xl flex flex-col justify-between relative overflow-hidden cursor-pointer hover:shadow-2xl active:scale-95 transition-all">
               <div className="absolute top-0 right-0 w-32 h-32 bg-rose-400/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-rose-100/50 text-rose-600 flex items-center justify-center shadow-inner">
@@ -1044,30 +1045,38 @@ export default function Dashboard() {
       ></motion.div>
 
       {/* --- Left Sidebar (Dark Glass) --- */}
-      <aside className="w-64 bg-[#0B1727]/90 backdrop-blur-3xl text-white flex flex-col shadow-[10px_0_30px_rgba(0,0,0,0.1)] relative z-20 border-r border-white/10">
+      {/* --- Mobile Overlay Backdrop --- */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+      {/* --- Left Sidebar (Dark Glass) --- */}
+      <aside className={`w-64 bg-[#0B1727]/95 backdrop-blur-3xl text-white flex flex-col shadow-[10px_0_30px_rgba(0,0,0,0.5)] absolute md:relative z-50 h-full border-r border-white/10 transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <div className="p-6 border-b border-white/10 flex items-center gap-3 bg-black/10">
           <LogoSVG />
           <span className="text-xl font-bold tracking-tight">Madhu<span className="text-[#2A9D8F] font-normal">Vision</span></span>
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          <button onClick={() => { setActiveTab('overview'); setSelectedPatient(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'overview' && !selectedPatient ? 'bg-[#2A9D8F]/90 backdrop-blur-md text-white shadow-lg border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
+          <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('overview'); setSelectedPatient(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'overview' && !selectedPatient ? 'bg-[#2A9D8F]/90 backdrop-blur-md text-white shadow-lg border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
             <LayoutDashboard size={20} /> <Translate text="Dashboard Home" />
           </button>
           
-          <button onClick={() => { setActiveTab('add_patient'); setSelectedPatient(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'add_patient' && !selectedPatient ? 'bg-[#2A9D8F]/90 backdrop-blur-md text-white shadow-lg border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
+          <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('add_patient'); setSelectedPatient(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'add_patient' && !selectedPatient ? 'bg-[#2A9D8F]/90 backdrop-blur-md text-white shadow-lg border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
             <UserPlus size={20} /> <Translate text="Add New Scan" />
           </button>
           
-          <button onClick={() => { setActiveTab('patients'); setSelectedPatient(null); setSearchQuery(''); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${(activeTab === 'patients' || selectedPatient) ? 'bg-[#2A9D8F]/90 backdrop-blur-md text-white shadow-lg border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
+          <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('patients'); setSelectedPatient(null); setSearchQuery(''); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${(activeTab === 'patients' || selectedPatient) ? 'bg-[#2A9D8F]/90 backdrop-blur-md text-white shadow-lg border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
             <Users size={20} /> <Translate text="All Patients" />
           </button>
 
-          <button onClick={() => { setActiveTab('severe'); setSelectedPatient(null); setSearchQuery(''); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'severe' ? 'bg-rose-500/90 backdrop-blur-md text-white shadow-lg border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
+          <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('severe'); setSelectedPatient(null); setSearchQuery(''); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'severe' ? 'bg-rose-500/90 backdrop-blur-md text-white shadow-lg border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
             <AlertCircle size={20} /> <Translate text="Severe Cases" />
           </button>
 
-          <button onClick={() => { setActiveTab('madhu_ai'); setSelectedPatient(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all mt-4 border ${activeTab === 'madhu_ai' ? 'bg-indigo-500/90 text-white border-indigo-400/50 shadow-[0_0_15px_rgba(99,102,241,0.5)]' : 'bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 border-indigo-500/20'}`}>
+          <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('madhu_ai'); setSelectedPatient(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all mt-4 border ${activeTab === 'madhu_ai' ? 'bg-indigo-500/90 text-white border-indigo-400/50 shadow-[0_0_15px_rgba(99,102,241,0.5)]' : 'bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 border-indigo-500/20'}`}>
             <Sparkles size={20} className={activeTab === 'madhu_ai' ? 'animate-pulse' : ''} /> <Translate text="Madhu AI" />
           </button>
 
@@ -1075,11 +1084,11 @@ export default function Dashboard() {
             <p className="px-4 text-xs font-bold uppercase tracking-wider text-slate-500"><Translate text="System" /></p>
           </div>
 
-          <button onClick={() => { setActiveTab('about'); setSelectedPatient(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'about' && !selectedPatient ? 'bg-[#2A9D8F]/90 backdrop-blur-md text-white shadow-lg border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
+          <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('about'); setSelectedPatient(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'about' && !selectedPatient ? 'bg-[#2A9D8F]/90 backdrop-blur-md text-white shadow-lg border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
             <Info size={20} /> <Translate text="About Us" />
           </button>
 
-          <button onClick={() => { setActiveTab('settings'); setSelectedPatient(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'settings' && !selectedPatient ? 'bg-[#2A9D8F]/90 backdrop-blur-md text-white shadow-lg border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
+          <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('settings'); setSelectedPatient(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'settings' && !selectedPatient ? 'bg-[#2A9D8F]/90 backdrop-blur-md text-white shadow-lg border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
             <Settings size={20} /> <Translate text="Settings" />
           </button>
         </nav>
@@ -1101,7 +1110,18 @@ export default function Dashboard() {
       </aside>
 
       {/* --- Main Content Area (Glass) --- */}
-      <div className="flex-1 flex flex-col overflow-hidden relative z-10">
+      <div className="flex-1 flex flex-col overflow-hidden relative z-10 w-full max-w-full">
+        {/* --- Mobile Header --- */}
+        <div className="md:hidden flex items-center justify-between p-4 bg-white/50 backdrop-blur-md border-b border-white/40 z-30 relative shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="font-black text-[#2A9D8F] tracking-tighter text-xl drop-shadow-sm flex items-center gap-1">
+              MADHU<span className="text-slate-700">VISION</span>
+            </span>
+          </div>
+          <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 bg-[#0B1727] text-white rounded-lg shadow-md active:scale-95 transition-all">
+             <Menu size={24} />
+          </button>
+        </div>
         
         {/* Top Header */}
         <header className="h-20 bg-white/40 backdrop-blur-xl border-b border-white/50 flex items-center justify-between px-8 z-10 shadow-sm no-print">
