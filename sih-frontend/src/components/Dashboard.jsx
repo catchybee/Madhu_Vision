@@ -1112,16 +1112,7 @@ export default function Dashboard() {
       {/* --- Main Content Area (Glass) --- */}
       <div className="flex-1 flex flex-col overflow-hidden relative z-10 w-full max-w-full">
         {/* --- Mobile Header --- */}
-        <div className="md:hidden flex items-center justify-between p-4 bg-white/50 backdrop-blur-md border-b border-white/40 z-30 relative shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="font-black text-[#2A9D8F] tracking-tighter text-xl drop-shadow-sm flex items-center gap-1">
-              MADHU<span className="text-slate-700">VISION</span>
-            </span>
-          </div>
-          <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 bg-[#0B1727] text-white rounded-lg shadow-md active:scale-95 transition-all">
-             <Menu size={24} />
-          </button>
-        </div>
+        
         
         {/* Top Header */}
         <header className="h-20 bg-white/40 backdrop-blur-xl border-b border-white/50 flex items-center justify-between px-8 z-10 shadow-sm no-print">
