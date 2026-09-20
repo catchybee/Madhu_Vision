@@ -25,6 +25,12 @@ export default function Dashboard() {
   const [uiClinicalNote, setUiClinicalNote] = useState(null);
   const [isFetchingNote, setIsFetchingNote] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Auto-wake the Render backend just in case
+  useEffect(() => {
+    fetch(`${API_URL}/`).catch(() => {}); // Silent ping
+  }, []);
+
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {

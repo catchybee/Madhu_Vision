@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
@@ -18,6 +18,13 @@ export default function Auth() {
   
   const [isLogin, setIsLogin] = useState(true);
   const [message, setMessage] = useState('');
+
+  // Auto-wake the Render backend in the background so it's ready by the time the user logs in
+  useEffect(() => {
+    const API_URL = import.meta.env.VITE_API_URL || 'https://madhu-vision.onrender.com';
+    fetch(`${API_URL}/`).catch(() => {}); // Silent ping
+  }, []);
+
   const navigate = useNavigate();
 
   // Scroll hook for fading/scaling the overall canvas
