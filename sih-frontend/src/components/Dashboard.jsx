@@ -79,6 +79,20 @@ export default function Dashboard() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('error');
+
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   const [fullScreenImage, setFullScreenImage] = useState(null);
 
   const navigate = useNavigate();
@@ -166,6 +180,15 @@ export default function Dashboard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (isOffline) {
+      localStorage.setItem('offline_draft', JSON.stringify(formData));
+      setMessage('You are offline. Draft saved. Connect to Wi-Fi to process scan.');
+      setMessageType('error');
+      setSubmitting(false);
+      return;
+    }
+
     if (!file) {
       setMessage('Please select a retinal image to analyze.');
       setMessageType('error');
