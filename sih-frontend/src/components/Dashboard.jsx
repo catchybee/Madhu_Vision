@@ -812,28 +812,48 @@ export default function Dashboard() {
   };
 
   const renderAbout = () => (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible" exit="exit" className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-slate-800 mb-8 drop-shadow-sm"><Translate text="About Us" /></h2>
-      <div className="bg-white/50 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/60">
-        <h3 className="font-bold text-slate-800 text-xl mb-4"><Translate text="About MadhuVision" /></h3>
-        <p className="text-slate-700 leading-relaxed font-medium mb-6">
-          <Translate text="MadhuVision was created for the Smart India Hackathon (SIH) 2026 to combat preventable blindness in India. By combining deep learning, mathematically proven Grad-CAM visualizations, and an intuitive UI, we empower rural and urban clinics to detect Diabetic Retinopathy in seconds." />
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          <div className="bg-blue-500/10 p-6 rounded-2xl border border-blue-500/20">
-            <h4 className="font-bold text-blue-800 mb-2"><Translate text="Explainable AI" /></h4>
-            <p className="text-sm text-blue-700/80"><Translate text="Our models don't just give a grade; they show you exactly why. We extract FC layer weights to generate true activation maps." /></p>
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" exit="exit" className="max-w-5xl mx-auto space-y-8">
+      <div className="flex flex-col md:flex-row items-center gap-8 bg-white/50 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/60">
+        <div className="flex-1 space-y-4">
+          <div className="inline-block bg-[#2A9D8F]/10 border border-[#2A9D8F]/20 text-[#2A9D8F] px-4 py-1.5 rounded-full text-sm font-bold shadow-sm mb-2">
+            Team NEXORA24 &nbsp;&bull;&nbsp; Team ID: 152435
           </div>
-          <div className="bg-[#2A9D8F]/10 p-6 rounded-2xl border border-[#2A9D8F]/20">
-            <h4 className="font-bold text-[#2A9D8F] mb-2"><Translate text="Bhashini Integrated" /></h4>
-            <p className="text-sm text-[#2A9D8F]/80"><Translate text="Built with vernacular translation in mind, ensuring our platform is usable by healthcare staff across all linguistic regions of India." /></p>
-          </div>
+          <h2 className="text-3xl font-extrabold text-slate-800"><Translate text="The Story of MadhuVision" /></h2>
+          <p className="text-slate-700 leading-relaxed font-medium">
+            <Translate text="MadhuVision was created for the Smart India Hackathon (SIH) 2026 to combat preventable blindness in India. By combining deep learning, mathematically proven Grad-CAM visualizations, and an intuitive UI, we empower rural and urban clinics to detect Diabetic Retinopathy in seconds." />
+          </p>
+          <p className="text-slate-700 leading-relaxed font-medium">
+            <Translate text="Our mission is to bridge the gap between advanced AI diagnostics and accessible healthcare, providing doctors with an explainable, secure, and blazing-fast tool for early disease detection." />
+          </p>
+        </div>
+        <div className="flex-1 w-full">
+          <img src="/retina_3d_ai.jpg" alt="MadhuVision AI" className="w-full h-auto object-cover rounded-2xl shadow-2xl border-4 border-white/80" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-blue-500/10 p-8 rounded-3xl border border-blue-500/20 text-center flex flex-col items-center hover:-translate-y-1 transition-transform">
+          <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 mb-4 shadow-sm"><Activity size={32}/></div>
+          <h4 className="font-bold text-blue-800 text-lg mb-2"><Translate text="Explainable AI" /></h4>
+          <p className="text-sm text-blue-700/80 font-medium"><Translate text="Our models don't just give a grade; they show you exactly why using mathematically perfect Grad-CAM activation maps." /></p>
+        </div>
+
+        <div className="bg-[#2A9D8F]/10 p-8 rounded-3xl border border-[#2A9D8F]/20 text-center flex flex-col items-center hover:-translate-y-1 transition-transform">
+          <div className="w-16 h-16 bg-[#2A9D8F]/20 rounded-2xl flex items-center justify-center text-[#2A9D8F] mb-4 shadow-sm"><MessageSquare size={32}/></div>
+          <h4 className="font-bold text-[#2A9D8F] text-lg mb-2"><Translate text="Bhashini Integrated" /></h4>
+          <p className="text-sm text-[#2A9D8F]/80 font-medium"><Translate text="Built with vernacular translation in mind, ensuring our platform is usable by healthcare staff across all linguistic regions of India." /></p>
+        </div>
+
+        <div className="bg-indigo-500/10 p-8 rounded-3xl border border-indigo-500/20 text-center flex flex-col items-center hover:-translate-y-1 transition-transform">
+           <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 mb-4 shadow-sm"><ShieldCheck size={32}/></div>
+          <h4 className="font-bold text-indigo-800 text-lg mb-2"><Translate text="Secure & Fast" /></h4>
+          <p className="text-sm text-indigo-700/80 font-medium"><Translate text="Powered by Supabase for enterprise-grade security and optimized with ONNX Runtime for instant edge-inference speeds." /></p>
         </div>
       </div>
     </motion.div>
   );
 
-    const handleChatSubmit = async (e) => {
+  const handleChatSubmit = async (e) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
