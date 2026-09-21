@@ -575,20 +575,27 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="grid md:grid-cols-3 gap-6">
-            <div>
-              <label className="block mb-2 text-slate-700">Mobile *</label>
-              <input type="text" name="patient_mobile" required value={formData.patient_mobile} onChange={handleChange} className="w-full px-4 py-3 bg-white/40 backdrop-blur-md border border-white/50 focus:border-[#2A9D8F] focus:ring-1 focus:ring-[#2A9D8F] focus:bg-white/70 rounded-xl outline-none shadow-sm transition-all placeholder:text-slate-400" placeholder="Number" />
-            </div>
-            <div>
-              <label className="block mb-2 text-slate-700">Sugar Level (mg/dL) *</label>
-              <input type="number" step="0.1" name="blood_sugar_level" required value={formData.blood_sugar_level} onChange={handleChange} className="w-full px-4 py-3 bg-white/40 backdrop-blur-md border border-white/50 focus:border-[#2A9D8F] focus:ring-1 focus:ring-[#2A9D8F] focus:bg-white/70 rounded-xl outline-none shadow-sm transition-all" placeholder="Level" />
-            </div>
-            <div>
-              <label className="block mb-2 text-slate-700">Diabetes Duration</label>
-              <input type="number" name="diabetes_duration_years" value={formData.diabetes_duration_years} onChange={handleChange} className="w-full px-4 py-3 bg-white/40 backdrop-blur-md border border-white/50 focus:border-[#2A9D8F] focus:ring-1 focus:ring-[#2A9D8F] focus:bg-white/70 rounded-xl outline-none shadow-sm transition-all" placeholder="Years" />
-            </div>
-          </motion.div>
+          <motion.div variants={itemVariants} className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block mb-2 text-slate-700">Mobile *</label>
+                <input type="text" name="patient_mobile" required value={formData.patient_mobile} onChange={handleChange} className="w-full px-4 py-3 bg-white/40 backdrop-blur-md border border-white/50 focus:border-[#2A9D8F] focus:ring-1 focus:ring-[#2A9D8F] focus:bg-white/70 rounded-xl outline-none shadow-sm transition-all placeholder:text-slate-400" placeholder="Number" />
+              </div>
+              <div>
+                <label className="block mb-2 text-slate-700">Email Address (Optional)</label>
+                <input type="email" name="patient_email" value={formData.patient_email} onChange={handleChange} className="w-full px-4 py-3 bg-white/40 backdrop-blur-md border border-white/50 focus:border-[#2A9D8F] focus:ring-1 focus:ring-[#2A9D8F] focus:bg-white/70 rounded-xl outline-none shadow-sm transition-all placeholder:text-slate-400" placeholder="patient@email.com" />
+              </div>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block mb-2 text-slate-700">Sugar Level (mg/dL) *</label>
+                <input type="number" step="0.1" name="blood_sugar_level" required value={formData.blood_sugar_level} onChange={handleChange} className="w-full px-4 py-3 bg-white/40 backdrop-blur-md border border-white/50 focus:border-[#2A9D8F] focus:ring-1 focus:ring-[#2A9D8F] focus:bg-white/70 rounded-xl outline-none shadow-sm transition-all" placeholder="Level" />
+              </div>
+              <div>
+                <label className="block mb-2 text-slate-700">Diabetes Duration</label>
+                <input type="number" name="diabetes_duration_years" value={formData.diabetes_duration_years} onChange={handleChange} className="w-full px-4 py-3 bg-white/40 backdrop-blur-md border border-white/50 focus:border-[#2A9D8F] focus:ring-1 focus:ring-[#2A9D8F] focus:bg-white/70 rounded-xl outline-none shadow-sm transition-all" placeholder="Years" />
+              </div>
+            </motion.div>
 
           <motion.div variants={itemVariants} className="pt-4">
             <label className="block mb-3 text-slate-800 font-bold text-base">Upload Retinal Scan *</label>
