@@ -94,6 +94,7 @@ export default function Dashboard() {
   }, []);
 
   const [fullScreenImage, setFullScreenImage] = useState(null);
+  const [zoomedQuadrant, setZoomedQuadrant] = useState(null);
 
   const navigate = useNavigate();
 
@@ -1220,33 +1221,62 @@ export default function Dashboard() {
       </div>
 
       {/* --- Lightbox Modal (Dark Glass) --- */}
-      <AnimatePresence>
-        {fullScreenImage && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0B1727]/80 backdrop-blur-xl p-4"
-            onClick={() => setFullScreenImage(null)}
-          >
+        <AnimatePresence>
+          {fullScreenImage && (
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative max-w-[90vw] max-h-[90vh] flex justify-center bg-black/50 rounded-2xl overflow-hidden shadow-2xl border border-white/20 backdrop-blur-md"
-              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0B1727]/90 backdrop-blur-xl p-4"
+              onClick={() => { setFullScreenImage(null); setZoomedQuadrant(null); }}
             >
-              <button 
-                className="absolute top-4 right-4 text-white/70 hover:text-white bg-black/40 hover:bg-black/60 p-2 rounded-full backdrop-blur-xl border border-white/10 transition-all z-10"
-                onClick={() => setFullScreenImage(null)}
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="relative max-w-[90vw] max-h-[90vh] flex justify-center bg-black/50 rounded-2xl overflow-hidden shadow-2xl border border-white/20 backdrop-blur-md"
+                onClick={(e) => e.stopPropagation()}
               >
-                <X size={24} />
-              </button>
-              <img src={fullScreenImage} alt="Full screen" className="max-w-full max-h-[90vh] object-contain" />
+                <button 
+                  className="absolute top-4 right-4 text-white/70 hover:text-white bg-black/40 hover:bg-black/60 p-2 rounded-full backdrop-blur-xl border border-white/10 transition-all z-20"
+                  onClick={() => { setFullScreenImage(null); setZoomedQuadrant(null); }}
+                >
+                  <X size={24} />
+                </button>
+                
+                <div className="relative overflow-hidden flex items-center justify-center w-full h-full cursor-zoom-in">
+                  <img 
+                    src={fullScreenImage} 
+                    alt="Full screen" 
+                    className="max-w-full max-h-[90vh] object-contain transition-transform duration-500 ease-out"
+                    style={{
+                      transform: zoomedQuadrant ? 'scale(2.1)' : 'scale(1)',
+                      transformOrigin: zoomedQuadrant === 1 ? '25% 28%' : 
+                                       zoomedQuadrant === 2 ? '75% 28%' : 
+                                       zoomedQuadrant === 3 ? '25% 72%' : 
+                                       zoomedQuadrant === 4 ? '75% 72%' : 'center'
+                    }}
+                  />
+                  
+                  {/* Invisible Hitboxes for the 4 quadrants */}
+                  {!zoomedQuadrant && (
+                    <div className="absolute inset-0 grid grid-cols-2 grid-rows-2">
+                      <div className="hover:bg-white/10 transition-colors" onClick={() => setZoomedQuadrant(1)} title="Zoom Original" />
+                      <div className="hover:bg-white/10 transition-colors" onClick={() => setZoomedQuadrant(2)} title="Zoom Enhanced" />
+                      <div className="hover:bg-white/10 transition-colors" onClick={() => setZoomedQuadrant(3)} title="Zoom Segmentation" />
+                      <div className="hover:bg-white/10 transition-colors" onClick={() => setZoomedQuadrant(4)} title="Zoom Grad-CAM" />
+                    </div>
+                  )}
+
+                  {/* If zoomed, clicking anywhere resets it */}
+                  {zoomedQuadrant && (
+                    <div className="absolute inset-0 cursor-zoom-out" onClick={() => setZoomedQuadrant(null)} title="Zoom Out" />
+                  )}
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
     </div>
   );
 }
