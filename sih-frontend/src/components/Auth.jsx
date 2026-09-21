@@ -145,16 +145,6 @@ export default function Auth() {
               Madhu<span className="text-cyan-500 font-normal">Vision</span>
             </span>
           </div>
-          
-          {/* Language Dropdown */}
-          <div className="flex items-center gap-2 bg-slate-100 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-200 transition-colors cursor-pointer">
-            <Globe size={18} className="text-slate-600" />
-            <select className="bg-transparent outline-none text-sm font-medium text-slate-700 cursor-pointer">
-              <option value="en">English (US)</option>
-              <option value="hi">हिन्दी (Hindi)</option>
-              <option value="te">తెలుగు (Telugu)</option>
-            </select>
-          </div>
         </div>
       </nav>
 
