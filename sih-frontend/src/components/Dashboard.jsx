@@ -195,7 +195,7 @@ export default function Dashboard() {
 
       const { data: publicUrlData } = supabase.storage.from('retinal-images').getPublicUrl(filePath);
 
-      const { data: existingPatient, error: fetchPatientError } = await supabase.from('patients').select('patient_name').eq('patient_id', formData.patient_id).maybeSingle();
+      const { data: existingPatient, error: fetchPatientError } = await supabase.from('patients').select('patient_name').eq('patient_id', formData.patient_id).eq('doctor_id', session.user.id).maybeSingle();
       if (fetchPatientError) throw fetchPatientError;
 
       if (existingPatient) {
@@ -204,11 +204,10 @@ export default function Dashboard() {
         }
       }
 
-      const patientData = {
-        patient_id: formData.patient_id, patient_name: formData.patient_name, patient_age: parseInt(formData.patient_age),
-        gender: formData.gender, patient_mobile: formData.patient_mobile, patient_email: formData.patient_email,
-        blood_group: formData.blood_group, diabetes_duration_years: parseInt(formData.diabetes_duration_years) || null,
-      };
+              const patientData = {
+          patient_id: formData.patient_id, doctor_id: session.user.id, patient_name: formData.patient_name, patient_age: parseInt(formData.patient_age),
+          blood_group: formData.blood_group, diabetes_duration_years: parseInt(formData.diabetes_duration_years) || null,
+        };
 
       const { error: patientError } = await supabase.from('patients').upsert([patientData]);
       if (patientError) throw patientError;
