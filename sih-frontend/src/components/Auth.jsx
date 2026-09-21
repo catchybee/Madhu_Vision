@@ -233,9 +233,8 @@ export default function Auth() {
                 </motion.div>
               )}
 
-              
               {isForgotPassword ? (
-                <form onSubmit={handleForgotPassword} className="space-y-4">
+<form onSubmit={handleForgotPassword} className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-1">Email Address *</label>
                     <input type="email" required placeholder="doctor@clinic.com" className="w-full px-4 py-2.5 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -244,37 +243,40 @@ export default function Auth() {
                     {loading ? 'Processing...' : 'Send Reset Link'}
                   </button>
                 </form>
-              ) : (
-                <form onSubmit={handleAuth} className="space-y-4">
-                  {!isLogin && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">Doctor Name *</label>
-                        <input type="text" required placeholder="Dr. John Doe" className="w-full px-4 py-2.5 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm" value={doctorName} onChange={(e) => setDoctorName(e.target.value)} />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-1">License No. *</label>
-                          <input type="text" required placeholder="MD-12345" className="w-full px-4 py-2.5 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm" value={license} onChange={(e) => setLicense(e.target.value)} />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-1">Hospital / Clinic *</label>
-                          <input type="text" required placeholder="City Hospital" className="w-full px-4 py-2.5 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm" value={hospital} onChange={(e) => setHospital(e.target.value)} />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">Contact Number *</label>
-                        <input type="tel" required placeholder="+91 9876543210" className="w-full px-4 py-2.5 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm" value={contact} onChange={(e) => setContact(e.target.value)} />
-                      </div>
-                    </>
-                  )}
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Email Address *</label>
-                    <input type="email" required placeholder="doctor@clinic.com" className="w-full px-4 py-2.5 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm" value={email} onChange={(e) => setEmail(e.target.value)} />
-                  </div>
-                  <div className={!isLogin ? "grid grid-cols-2 gap-4" : ""}>
+) : (
+<form onSubmit={handleAuth} className="space-y-4">
+                
+                {!isLogin && (
+                  <>
                     <div>
-                      <div className="flex justify-between items-center mb-1">
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Doctor Name *</label>
+                      <input type="text" required placeholder="Dr. John Doe" className="w-full px-4 py-2.5 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm" value={doctorName} onChange={(e) => setDoctorName(e.target.value)} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">License No. *</label>
+                        <input type="text" required placeholder="MD-12345" className="w-full px-4 py-2.5 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm" value={license} onChange={(e) => setLicense(e.target.value)} />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Hospital / Clinic *</label>
+                        <input type="text" required placeholder="City Hospital" className="w-full px-4 py-2.5 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm" value={hospital} onChange={(e) => setHospital(e.target.value)} />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Contact Number *</label>
+                      <input type="tel" required placeholder="+91 9876543210" className="w-full px-4 py-2.5 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm" value={contact} onChange={(e) => setContact(e.target.value)} />
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Email Address *</label>
+                  <input type="email" required placeholder="doctor@clinic.com" className="w-full px-4 py-2.5 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm" value={email} onChange={(e) => setEmail(e.target.value)} />
+                </div>
+                
+                <div className={!isLogin ? "grid grid-cols-2 gap-4" : ""}>
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
                         <label className="block text-sm font-semibold text-slate-700">Password *</label>
                         {isLogin && (
                           <button type="button" onClick={() => { setIsForgotPassword(true); setMessage(''); }} className="text-xs text-blue-600 hover:underline font-semibold">
@@ -282,21 +284,26 @@ export default function Auth() {
                           </button>
                         )}
                       </div>
-                      <input type="password" required placeholder="        " className="w-full px-4 py-2.5 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm" value={password} onChange={(e) => setPassword(e.target.value)} />
-                    </div>
-                    {!isLogin && (
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">Confirm Password *</label>
-                        <input type="password" required placeholder="        " className="w-full px-4 py-2.5 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-                      </div>
-                    )}
+                    <input type="password" required placeholder="••••••••" className="w-full px-4 py-2.5 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm" value={password} onChange={(e) => setPassword(e.target.value)} />
                   </div>
-                  <button type="submit" disabled={loading} className="w-full py-3.5 mt-4 font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl hover:from-blue-700 hover:to-blue-800 shadow-lg shadow-blue-600/30 transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2">
-                    {loading ? 'Processing...' : (isLogin ? 'Sign In to Dashboard' : 'Create Doctor Account')}
-                    {!loading && <ArrowRight size={18} />}
-                  </button>
-                </form>
-              )}
+                  {!isLogin && (
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Confirm Password *</label>
+                      <input type="password" required placeholder="••••••••" className="w-full px-4 py-2.5 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                    </div>
+                  )}
+                </div>
+                
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3.5 mt-4 font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl hover:from-blue-700 hover:to-blue-800 shadow-lg shadow-blue-600/30 transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2"
+                >
+                  {loading ? 'Processing...' : (isLogin ? 'Sign In to Dashboard' : 'Create Doctor Account')}
+                  {!loading && <ArrowRight size={18} />}
+                </button>
+              </form>
+)}
 
               <div className="mt-8 pt-6 border-t border-slate-200 text-center">
                 {isForgotPassword ? (
@@ -308,14 +315,17 @@ export default function Auth() {
                   </p>
                 ) : (
                   <p className="text-slate-600 font-medium">
-                    {isLogin ? "New to MadhuVision? " : "Already have an account? "}
-                    <button type="button" onClick={() => { setIsLogin(!isLogin); setMessage(''); }} className="text-blue-600 font-bold hover:text-blue-700 hover:underline transition-all">
-                      {isLogin ? 'Create an account' : 'Sign in here'}
-                    </button>
-                  </p>
+                  {isLogin ? "New to MadhuVision? " : "Already have an account? "}
+                  <button 
+                    type="button"
+                    onClick={() => setIsLogin(!isLogin)}
+                    className="text-blue-600 font-bold hover:text-blue-700 hover:underline transition-all"
+                  >
+                    {isLogin ? 'Create an account' : 'Sign in here'}
+                  </button>
+                </p>
                 )}
               </div>
-</div>
               </div>
             </motion.div>
           </motion.div>
