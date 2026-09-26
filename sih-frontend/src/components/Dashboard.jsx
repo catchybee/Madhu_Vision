@@ -7,7 +7,7 @@ import {
   LogOut, UploadCloud, Activity, User, Droplet, Clock, Search, 
   FileText, ShieldCheck, X, LayoutDashboard, UserPlus, Users, Info, 
   Settings, ChevronLeft, Menu, AlertCircle, Download, Mail, Bot, Send, Sparkles, MessageSquare, Edit2, Save
-} from 'lucide-react';
+, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, LabelList } from 'recharts';
 import { translateText, getCachedText } from '../bhashini';
@@ -352,6 +352,30 @@ export default function Dashboard() {
       alert("Error generating PDF: " + err.message);
     } finally {
       if(originalText) originalText.innerText = "Download PDF";
+    }
+  };
+
+
+  const handleDeleteRecord = async (scanId) => {
+    if (!window.confirm("Are you sure you want to permanently delete this patient's scan record? This action cannot be undone.")) return;
+    
+    try {
+      const { error } = await supabase
+        .from('madhuvision')
+        .delete()
+        .eq('id', scanId)
+        .eq('doctor_id', session.user.id);
+        
+      if (error) throw error;
+      
+      // Update UI state immediately
+      setDiagnoses(prev => prev.filter(diag => diag.id !== scanId));
+      setSelectedPatient(null);
+      setMessage("Patient record deleted successfully.");
+      setMessageType("success");
+      
+    } catch (error) {
+      alert("Error deleting record: " + error.message);
     }
   };
 
@@ -746,7 +770,10 @@ export default function Dashboard() {
           </motion.button>
           
           <motion.div variants={itemVariants} className="flex gap-3">
-            <button onClick={handleEmail} className="flex items-center gap-2 bg-white/50 hover:bg-white/80 text-blue-700 font-bold px-4 py-2 rounded-xl border border-blue-500/30 shadow-sm hover:shadow-md active:scale-95 cursor-pointer transition-all">
+                          <button onClick={() => handleDeleteRecord(selectedPatient.id)} className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-600 font-bold px-4 py-2 rounded-xl border border-red-500/30 shadow-sm hover:shadow-md active:scale-95 cursor-pointer transition-all">
+                <Trash2 size={18} /> Delete Record
+              </button>
+              <button onClick={handleEmail} className="flex items-center gap-2 bg-white/50 hover:bg-white/80 text-blue-700 font-bold px-4 py-2 rounded-xl border border-blue-500/30 shadow-sm hover:shadow-md active:scale-95 cursor-pointer transition-all">
               <Mail size={18} /> Email Patient
             </button>
             <button onClick={generatePDF} className="flex items-center gap-2 bg-[#2A9D8F] hover:bg-[#218276] active:scale-95 cursor-pointer text-white font-bold px-4 py-2 rounded-xl shadow-md hover:shadow-lg transition-all">
