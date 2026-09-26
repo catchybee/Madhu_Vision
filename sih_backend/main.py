@@ -86,6 +86,28 @@ def encode_base64(img_rgb):
 def health_check():
     return {"status": "AI Server is running perfectly"}
 
+def is_valid_retina(img_rgb):
+    import numpy as np
+    import cv2
+    # 1. Color Profile Check (Retinas are predominantly red, low blue)
+    mean_r = np.mean(img_rgb[:, :, 0])
+    mean_g = np.mean(img_rgb[:, :, 1])
+    mean_b = np.mean(img_rgb[:, :, 2])
+    
+    if mean_b > mean_r:
+        return False, "Image rejected by Quality Gate: Color profile mismatch (Excessive blue tones). Please upload a valid retinal fundus scan."
+        
+    # 2. Texture/Edge Density Check (Retinas are mostly smooth)
+    gray = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY)
+    edges = cv2.Canny(gray, 100, 200)
+    edge_density = np.sum(edges / 255.0) / (edges.shape[0] * edges.shape[1])
+    
+    # Random objects (like dogs) have high edge density
+    if edge_density > 0.15:
+        return False, f"Image rejected by Quality Gate: Excessive high-frequency texture (Edge density: {edge_density:.2f}). Please upload a clear fundus scan."
+        
+    return True, "Valid"
+
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     try:
@@ -93,6 +115,12 @@ async def predict(file: UploadFile = File(...)):
         
         # 1. Preprocess
         input_tensor, orig_img, enhanced_img = preprocess_image(contents)
+        
+        # 1.5 Quality Gate Check
+        is_valid, reject_reason = is_valid_retina(orig_img)
+        if not is_valid:
+            return {"success": False, "error": reject_reason}
+
         
         # 2. Run AI Prediction (needs the CAM model)
         outputs = session.run(None, {input_name: input_tensor})
