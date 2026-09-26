@@ -103,7 +103,7 @@ def is_valid_retina(img_rgb):
     edge_density = np.sum(edges / 255.0) / (edges.shape[0] * edges.shape[1])
     
     # Random objects (like dogs) have high edge density
-    if edge_density > 0.15:
+    if edge_density > 0.35:
         return False, f"Image rejected by Quality Gate: Excessive high-frequency texture (Edge density: {edge_density:.2f}). Please upload a clear fundus scan."
         
     return True, "Valid"
